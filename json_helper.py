@@ -1,18 +1,24 @@
+import pandas as pd
+import os
 import json
-import urllib.request
-import requests
 
+file_path = os.path.join('./', 'data', 'daily_summaries')
 
-offset = 1
-token = 'zNAcumGiNNGpKzBIzmUpQJElLKxZZTet'
+def read_json(file_path):
+    with open(file_path, 'r') as f:
+        json_obj = json.load(f)
+        return json_obj
 
-for i in range (2):
-    url = "https://www.ncdc.noaa.gov/cdo-web/api/v2/data?datasetid=GHCND&locationid=FIPS:10003&startdate=2018-01-01&enddate=2018-01-31&limit=1000&offset=" + str(offset)
+def read_all_json_files(JSON_ROOT):
+    df = pd.DataFrame()
+    ser = pd.Series()
+    for file_name in os.listdir(JSON_ROOT):
+        if file_name.find('daily_summaries') == -1:
+            continue
+        file_path = 'data/daily_summaries/' + file_name
+        data = read_json(file_path)
+        for obj in data['results']:
+            obj['source'] = file_name
+        df = df.append(data['results'])
+    return df
 
-    response = requests.get(url, headers={'Token': token})
-    data = response.json()
-    output_f= f"daily_summaries_FIPS10003_jan_2018_" + str(i) + ".json"
-    json_file = open(output_f, 'w')
-    json.dump(data, json_file)
-    json_file.close()
-    offset += 1000
